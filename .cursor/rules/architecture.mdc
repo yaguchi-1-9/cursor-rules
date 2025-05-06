@@ -1,0 +1,199 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# アーキテクチャルール
+
+## クリーンアーキテクチャの原則
+
+### 層の分離
+1. ドメイン層（最内層）
+   - `Domain/`ディレクトリ
+   - エンティティ、バリューオブジェクト、ドメインサービス
+   - 純粋なビジネスルール
+   - 外部の変更に影響されない
+
+2. ユースケース層（アプリケーション層）
+   - `UseCase/`ディレクトリ
+   - UseCase、Input/Output
+   - ドメイン操作のオーケストレーション
+   - ビジネスフローの制御
+
+3. プレゼンテーション層
+   - `Presentation/`ディレクトリ
+   - Presenter、ViewModel、Response DTO
+   - ユースケースの出力をUI/API仕様に整形
+   - ビジネスロジックを持たない
+
+4. インターフェース層
+   - `Http/`ディレクトリ
+   - コントローラー
+   - ユースケース呼び出し
+
+5. ビュー層
+   - `resources/views/`ディレクトリ
+   - Bladeテンプレート、Reactコンポーネント
+   - 実際の画面描画
+   - Presenter/ViewModelから受け取ったデータの表示
+
+6. フレームワーク＆ドライバ層（最外層）
+   - `Infrastructure/`ディレクトリ
+   - Laravel本体、HTTPサーバ、DBドライバ
+   - インフラ依存コードの提供
+   - 外部システムとの接続
+
+### 依存関係の方向
+- 依存関係は外側から内側に向かう
+- 内側の層は外側の層の存在を知らない
+- インターフェースを介して通信
+- 依存性逆転の原則を適用
+
+### リポジトリの使用ルール
+1. リポジトリインターフェースの定義
+   - リポジトリインターフェースは必ず`Domain/DataAccess/Repository/`に定義
+   - インターフェース名は`{Entity}RepositoryInterface`の形式
+   - 例：`UserRepositoryInterface`、`SchoolRepositoryInterface`
+
+2. リポジトリの実装
+   - リポジトリの実装は必ず`Infrastructure/Repository/`に配置
+   - 実装クラス名は`{Entity}Repository`の形式
+   - 例：`UserRepository`、`SchoolRepository`
+
+3. リポジトリの使用
+   - リポジトリへのアクセスは必ずインターフェース経由
+   - 直接実装クラスを参照してはならない
+   - 依存性注入でインターフェースを注入
+
+4. リポジトリの呼び出し可能な層
+   - 以下の層からのみリポジトリインターフェースを呼び出し可能：
+     1. ドメイン層（Domain/）
+     2. ユースケース層（UseCase/）
+   - コントローラー（Controller）からリポジトリインターフェースを直接呼び出してはならない
+   - コントローラーは必ずユースケース層を経由してデータアクセスを行う
+
+5. リポジトリの責務
+   - データの永続化と取得
+   - トランザクション管理
+   - クエリの最適化
+   - キャッシュの制御
+
+6. リポジトリの実装例
+```php
+// Domain/DataAccess/Repository/UserRepositoryInterface.php
+interface UserRepositoryInterface
+{
+    public function findById(int $id): ?User;
+    public function save(User $user): void;
+    // ...
+}
+
+// Infrastructure/Repository/UserRepository.php
+class UserRepository implements UserRepositoryInterface
+{
+    public function findById(int $id): ?User
+    {
+        // 実装
+    }
+    
+    public function save(User $user): void
+    {
+        // 実装
+    }
+    // ...
+}
+
+// UseCase/User/ShowUserDetail/ShowUserDetailUseCase.php
+class ShowUserDetailUseCase
+{
+    private UserRepositoryInterface $userRepository;
+    
+    public function __construct(UserRepositoryInterface $userRepository)
+    {
+        $this->userRepository = $userRepository;
+    }
+    
+    public function execute(ShowUserDetailInput $input): ShowUserDetailOutput
+    {
+        $user = $this->userRepository->findById($input->userId);
+        // ...
+    }
+}
+```
+
+## 各層の責務
+
+### ドメイン層
+- ビジネスルールの定義
+- エンティティとバリューオブジェクトの実装
+- ドメインサービスの提供
+- 外部依存のない純粋なビジネスロジック
+
+### ユースケース層
+- アプリケーション固有のビジネスルール
+- ドメイン操作のオーケストレーション
+- 入力（Input）と出力（Output）の境界定義
+- トランザクション管理
+
+### プレゼンテーション層
+- ユースケースの出力をUI/API仕様に変換
+- ビジネスロジックを持たない
+- 表示データの整形
+- エラーメッセージの管理
+
+### インターフェース層
+- HTTPリクエストの受付
+- ユースケースの呼び出し
+- レスポンスの生成
+- 認証・認可の制御
+
+### ビュー層
+- 画面の描画
+- ユーザーインターフェースの実装
+- スタイリング
+- インタラクションの制御
+
+### フレームワーク＆ドライバ層
+- インフラストラクチャの提供
+- データベース接続
+- 外部サービスとの連携
+- フレームワーク固有の機能
+
+## 実装ガイドライン
+1. ドメイン層
+   - 純粋なPHPクラスのみを使用
+   - フレームワークの依存関係を避ける
+   - インターフェースを定義して外部との通信を制御
+   - リポジトリインターフェースを直接使用可能
+
+2. ユースケース層
+   - ドメイン層のインターフェースを使用
+   - ビジネスロジックの実装に集中
+   - 外部システムとの通信はインターフェースを介して行う
+   - リポジトリインターフェースを直接使用可能
+   - コントローラーからの呼び出しに応答
+
+3. プレゼンテーション層
+   - ユースケースの出力を適切な形式に変換
+   - ビジネスロジックを含まない
+   - 表示データの整形に集中
+   - エラーハンドリングの実装
+
+4. インターフェース層
+   - 依存性逆転の原則に従う
+   - インターフェースを実装
+   - フレームワーク固有の実装を最小限に抑える
+   - リポジトリインターフェースを直接使用しない
+   - ユースケース層を経由してデータアクセスを行う
+
+5. ビュー層
+   - プレゼンテーション層から受け取ったデータのみを使用
+   - ビジネスロジックを含まない
+   - 表示に特化した実装
+   - 再利用可能なコンポーネントの提供
+
+6. フレームワーク＆ドライバ層
+   - フレームワークの機能を最大限活用
+   - 設定と統合に集中
+   - ビジネスロジックを含まない
+   - リポジトリインターフェースの実装を提供

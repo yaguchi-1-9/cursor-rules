@@ -1,0 +1,54 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Rule Name: apply
+Description: コード変更の生成に関するルール
+
+# ルールの詳細
+- 変更は最小限に抑えること
+- 既存のコードスタイルに合わせること
+- 必要なimport文を追加すること
+- コメントを適切に記述すること
+- エラーハンドリングを実装すること
+- テストコードの追加を検討すること
+- セキュリティ対策を考慮すること
+
+# 使用例
+```php
+<?php
+// 必要なimport文の追加
+use App\Services\UserService;
+use App\Exceptions\ValidationException;
+
+class UserController {
+    // 既存のコードスタイルに合わせた実装
+    public function updateUser(Request $request) {
+        try {
+            // 入力値のバリデーション
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users'
+            ]);
+            
+            // ユーザー情報の更新
+            $userService = new UserService();
+            $user = $userService->update($validated);
+            
+            return response()->json($user);
+        } catch (ValidationException $e) {
+            // エラーハンドリング
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 400);
+        }
+    }
+}
+```
+
+# 注意事項
+- コード変更前後で動作が変わらないことを確認すること
+- 既存のテストが失敗しないことを確認すること
+- セキュリティ上の脆弱性を生み出さないこと
+- パフォーマンスへの影響を考慮すること

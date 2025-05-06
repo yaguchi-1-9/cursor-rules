@@ -1,0 +1,204 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor Configuration
+Description: Cursorの設定ファイル
+
+# ワークフロー設定
+## 1. 実装案生成 (plan)
+### 説明
+実装案を３つ生成し、メリデメ＋おすすめを提示する
+
+### 設定
+```yaml
+workflow:
+  name: plan
+  description: 実装案を３つ生成し、メリデメ＋おすすめを提示する
+  rules: 
+    - .cursor/rules/project_rules.mdc
+    - .cursor/rules/plan.mdc
+    - .cursor/rules/architecture.mdc
+    - .cursor/rules/php.mdc
+    - .cursor/rules/docker.mdc
+  inputs:
+    - name: inputFile
+      type: file
+      description: 要件を記述したYAML/JSONファイルを選択してください
+    - name: currentVersion
+      type: string
+      description: package.jsonから取得した現在のバージョン
+      default: ${package.json.version}
+```
+
+### 実行手順
+1. 要件の分析
+   - 機能要件の整理
+   - 非機能要件の整理
+   - 制約条件の確認
+   - 優先度の考慮
+
+2. 実装案の提示（表形式）
+   - 案1: シンプルな実装
+   - 案2: 拡張性を重視した実装
+   - 案3: 将来性を考慮した実装
+
+3. 各案の評価
+   - 工数（小・中・大）
+   - 拡張性（高・中・低）
+   - 保守性（高・中・低）
+   - 具体的なメリット・デメリット
+   - リスク評価
+   - 技術的負債の見積もり
+
+4. おすすめ案の提示
+   - 選択理由
+   - 実装概要
+   - 想定される課題
+   - リスク対策
+   - 代替案の検討
+
+## 2. タスク分解 (breakdown)
+### 説明
+選択案を受けてタスク分解する
+
+### 設定
+```yaml
+workflow:
+  name: breakdown
+  description: 選択案を受けてタスク分解する
+  rules: 
+    - .cursor/rules/project_rules.mdc
+    - .cursor/rules/breakdown.mdc
+    - .cursor/rules/architecture.mdc
+    - .cursor/rules/php.mdc
+    - .cursor/rules/docker.mdc
+  dependencies:
+    - previous: lastResponse
+  inputs:
+    - name: sprintDuration
+      type: number
+      description: スプリント期間（日数）
+    - name: teamSize
+      type: number
+      description: チームサイズ
+    - name: currentVersion
+      type: string
+      description: package.jsonから取得した現在のバージョン
+      default: ${package.json.version}
+```
+
+### 実行手順
+1. プロジェクト構造
+   - ディレクトリ構成
+   - ファイル命名規則
+   - コーディング規約
+   - バージョン管理方針
+   - デプロイメント戦略
+
+2. データベース設計
+   - テーブル定義
+   - インデックス設計
+   - マイグレーション計画
+   - バックアップ戦略
+   - パフォーマンス考慮事項
+
+3. アプリケーション設計
+   - クラス図
+   - シーケンス図
+   - ユースケース図
+   - アーキテクチャパターン
+   - セキュリティ設計
+
+4. 実装タスク
+   - 優先順位付け
+   - 依存関係の整理
+   - 工数見積もり
+   - リソース配分
+   - マイルストーン設定
+
+5. テスト計画
+   - テスト項目
+   - テストデータ
+   - テスト環境
+   - 自動化戦略
+   - 品質基準
+
+## 3. コード変更生成 (apply)
+### 説明
+指定ステップを実行し、ファイル変更を生成する
+
+### 設定
+```yaml
+workflow:
+  name: apply
+  description: 指定ステップを実行し、ファイル変更を生成する
+  rules: 
+    - .cursor/rules/project_rules.mdc
+    - .cursor/rules/apply.mdc
+    - .cursor/rules/architecture.mdc
+    - .cursor/rules/php.mdc
+    - .cursor/rules/docker.mdc
+  dependencies:
+    - previous: lastResponse
+  inputs:
+    - name: stepNumber
+      type: number
+      description: 実行するステップ番号
+    - name: reviewType
+      type: select
+      options: [コードレビュー, ペアプログラミング, 自己レビュー]
+      description: レビュー方法を選択してください
+    - name: currentVersion
+      type: string
+      description: package.jsonから取得した現在のバージョン
+      default: ${package.json.version}
+    - name: nextVersion
+      type: string
+      description: 変更後のバージョン（セマンティックバージョニングに従う）
+```
+
+### 実行手順
+1. 変更内容の確認
+   - 変更対象ファイルの特定
+   - 既存コードの分析
+   - 変更範囲の決定
+   - 影響範囲の評価
+   - リグレッションテストの確認
+   - バージョン番号の確認と更新
+
+2. コード生成
+   - 新規ファイルの作成
+   - 既存ファイルの修正
+   - テストコードの追加
+   - ドキュメントの更新
+   - コメントの追加
+   - package.jsonのバージョン更新
+
+3. 品質チェック
+   - コーディング規約の遵守
+   - エラーハンドリングの実装
+   - セキュリティ対策の実装
+   - パフォーマンス最適化
+   - ユニットテストの実行
+
+4. レビューと改善
+   - コードレビューの実施
+   - フィードバックの反映
+   - リファクタリング
+   - ドキュメントの更新
+   - 変更履歴の記録
+
+# 注意事項
+- 各ワークフローは順番に実行する必要があります
+- 入力ファイルは適切な形式で準備してください
+- ステップ番号は1から始まる連番で指定してください
+- 各フェーズでの成果物は必ずバージョン管理してください
+- 定期的な進捗報告とステータス更新を行ってください
+- バージョン番号はセマンティックバージョニングに従って更新してください
+- package.jsonのバージョン更新は、変更の影響度に応じて適切に行ってください
+- クリーンアーキテクチャの原則に従って実装してください
+- セキュリティ対策を常に意識してください
+- パフォーマンス最適化を考慮してください
+- データベースの変更は常に新しいマイグレーションファイルを作成して行ってください

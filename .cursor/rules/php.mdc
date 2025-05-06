@@ -1,0 +1,91 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# PHP コーディングルール
+
+## データベース操作
+
+### スキーマファイルの参照
+- データベースのテーブル構造を変更する際は、必ず`database/schema/schema.sql`を参照します
+- テーブル名、カラム名、型、制約はスキーマファイルに準拠します
+- 新しいテーブルやカラムを追加する際は、スキーマファイルも更新します
+- テーブル定義の基本ルール：
+  - プライマリーキーは`id`とし、`bigint unsigned NOT NULL AUTO_INCREMENT`を使用
+  - 外部キーは`{table_name}_id`の形式で命名し、`bigint unsigned NOT NULL`を使用
+  - 作成日時と更新日時は`created_at`と`updated_at`を使用し、`datetime NOT NULL DEFAULT CURRENT_TIMESTAMP`を設定
+  - 文字列型は`varchar(255)`または`text`を使用し、`COLLATE utf8mb4_unicode_ci`を指定
+  - 論理値は`tinyint(1)`を使用し、デフォルト値を設定
+  - 外部キー制約は`ON DELETE CASCADE`を基本とする
+
+### Eloquentの使用禁止
+- Eloquent ORMの使用は禁止します
+- 以下のような記述は禁止です：
+  ```php
+  // 禁止
+  User::find(1);
+  User::where('name', 'John')->get();
+  User::create(['name' => 'John']);
+  ```
+
+### クエリビルダの使用
+- データベース操作は必ずクエリビルダを使用します
+- 例：
+  ```php
+  // 許可
+  DB::table('users')->find(1);
+  DB::table('users')->where('name', 'John')->get();
+  DB::table('users')->insert(['name' => 'John']);
+  ```
+
+### Repositoryパターンの実装
+- データベース操作は必ずRepositoryInterfaceとRepositoryを通して行います
+- 例：
+  ```php
+  // インターフェース
+  interface UserRepositoryInterface {
+      public function find(int $id): ?array;
+      public function create(array $data): array;
+  }
+
+  // 実装
+  class UserRepository implements UserRepositoryInterface {
+      public function find(int $id): ?array {
+          return DB::table('users')->find($id);
+      }
+
+      public function create(array $data): array {
+          return DB::table('users')->insert($data);
+      }
+  }
+  ```
+
+### コントローラーでの使用例
+```php
+class UserController {
+    private UserRepositoryInterface $userRepository;
+
+    public function __construct(UserRepositoryInterface $userRepository) {
+        $this->userRepository = $userRepository;
+    }
+
+    public function show(int $id) {
+        $user = $this->userRepository->find($id);
+        // ...
+    }
+}
+```
+
+## 命名規則
+- RepositoryInterface: `{EntityName}RepositoryInterface`
+- Repository: `{EntityName}Repository`
+- メソッド名はキャメルケースを使用
+- テーブル名はスネークケースを使用
+- カラム名はスネークケースを使用
+- 外部キーは`{table_name}_id`の形式で命名
+
+## 例外処理
+- データベース操作は必ずtry-catchで例外処理を行います
+- エラーメッセージは適切にログに記録します
+- 外部キー制約違反などのデータベースエラーは適切にハンドリングします
