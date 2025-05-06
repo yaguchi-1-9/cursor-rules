@@ -22,14 +22,6 @@ workflow:
     - .cursor/rules/architecture.mdc
     - .cursor/rules/php.mdc
     - .cursor/rules/docker.mdc
-  inputs:
-    - name: inputFile
-      type: file
-      description: 要件を記述したYAML/JSONファイルを選択してください
-    - name: currentVersion
-      type: string
-      description: package.jsonから取得した現在のバージョン
-      default: ${package.json.version}
 ```
 
 ### 実行手順
@@ -211,11 +203,6 @@ workflow:
     - .cursor/rules/docker.mdc
   dependencies:
     - previous: lastResponse
-  inputs:
-    - name: currentVersion
-      type: string
-      description: package.jsonから取得した現在のバージョン
-      default: ${package.json.version}
 ```
 
 ### 実行手順
@@ -356,15 +343,6 @@ workflow:
     - .cursor/rules/docker.mdc
   dependencies:
     - previous: lastResponse
-  inputs:
-    - name: reviewType
-      type: select
-      options: [コードレビュー, ペアプログラミング, 自己レビュー]
-      description: レビュー方法を選択してください
-    - name: currentVersion
-      type: string
-      description: package.jsonから取得した現在のバージョン
-      default: ${package.json.version}
 ```
 
 ### 実行手順
